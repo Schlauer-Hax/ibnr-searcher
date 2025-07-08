@@ -52,7 +52,7 @@ const SearchInterface = () => {
       <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
         <div className="text-center space-y-6 py-12">
           <div className="relative">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+            <h1 className="text-6xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] [text-shadow:0_0_20px_rgba(147,51,234,0.4)]" style={{ color: '#60a5fa !important' }}>
               IBNR Searcher
             </h1>
             <div className="absolute inset-0 bg-gradient-to-r from-primary via-blue-500 to-purple-500 opacity-20 blur-3xl -z-10"></div>
