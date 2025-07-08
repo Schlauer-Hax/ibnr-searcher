@@ -46,34 +46,45 @@ const SearchInterface = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold">CSV Search Engine</h1>
-        <p className="text-muted-foreground">
-          Search across multiple CSV datasets with instant results
-        </p>
-      </div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          type="text"
-          placeholder="Search across CSV data..."
-          value={query}
-          onChange={handleInputChange}
-          className="pl-10 text-lg py-6"
-        />
-      </div>
-
-      {query.trim().length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Found {results.length} results for "{query}"
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
+        <div className="text-center space-y-6 py-12">
+          <div className="relative">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent">
+              IBNR Searcher
+            </h1>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-blue-500 to-purple-500 opacity-20 blur-3xl -z-10"></div>
+          </div>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Advanced search engine for IBNR codes with real-time results and intelligent matching
+          </p>
         </div>
-      )}
 
-      {results.length > 0 && (
-        <div className="border rounded-lg overflow-hidden">
-          <Table>
+        <div className="relative max-w-2xl mx-auto">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+          <Input
+            type="text"
+            placeholder="Search IBNR codes, station names, or locations..."
+            value={query}
+            onChange={handleInputChange}
+            className="pl-12 text-lg py-8 bg-card/80 backdrop-blur-sm border-primary/20 focus:border-primary/50 shadow-lg hover:shadow-glow transition-all duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10 rounded-md -z-10 blur-xl opacity-50"></div>
+        </div>
+
+        {query.trim().length > 0 && (
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <span className="text-sm text-muted-foreground">
+                Found <span className="text-primary font-semibold">{results.length}</span> results for "{query}"
+              </span>
+            </div>
+          </div>
+        )}
+
+        {results.length > 0 && (
+          <div className="border border-primary/20 rounded-xl overflow-hidden bg-card/50 backdrop-blur-sm shadow-2xl">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-20">Source</TableHead>
@@ -86,14 +97,14 @@ const SearchInterface = () => {
             </TableHeader>
             <TableBody>
               {results.map((result) => (
-                <TableRow key={result.id} className="hover:bg-muted/50">
+                <TableRow key={result.id} className="hover:bg-primary/5 transition-colors duration-200 border-border/50">
                   <TableCell>
-                    <Badge variant={result.source === 'CSV1' ? 'default' : 'secondary'}>
+                    <Badge variant={result.source === 'CSV1' ? 'default' : 'secondary'} className="shadow-sm">
                       {result.source}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{result.score}</Badge>
+                    <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">{result.score}</Badge>
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <span 
@@ -136,8 +147,9 @@ const SearchInterface = () => {
               ))}
             </TableBody>
           </Table>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
