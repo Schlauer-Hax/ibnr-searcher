@@ -8,17 +8,36 @@ export let csvData3: string[] = [];
 export const loadCSVData = async (): Promise<void> => {
   try {
     const [response1, response2, response3] = await Promise.all([
-      fetch('/deutschland_nr.csv'),
-      fetch('/europa.csv'),
-      fetch('/grenze.csv')
+      fetch('/deutschland_nr.csv', {
+        headers: {
+          'Accept': 'text/csv;charset=UTF-8'
+        }
+      }),
+      fetch('/europa.csv', {
+        headers: {
+          'Accept': 'text/csv;charset=UTF-8'
+        }
+      }),
+      fetch('/grenze.csv', {
+        headers: {
+          'Accept': 'text/csv;charset=UTF-8'
+        }
+      })
     ]);
     
-    // Ensure proper character encoding by specifying UTF-8
-    const [text1, text2, text3] = await Promise.all([
-      response1.text(),
-      response2.text(),
-      response3.text()
+    // Get response as ArrayBuffer and decode with UTF-8
+    const [buffer1, buffer2, buffer3] = await Promise.all([
+      response1.arrayBuffer(),
+      response2.arrayBuffer(),
+      response3.arrayBuffer()
     ]);
+    
+    const decoder = new TextDecoder('utf-8');
+    const [text1, text2, text3] = [
+      decoder.decode(buffer1),
+      decoder.decode(buffer2),
+      decoder.decode(buffer3)
+    ];
     
     csvData1 = text1.trim().split('\n').filter(line => line.trim());
     csvData2 = text2.trim().split('\n').filter(line => line.trim());
