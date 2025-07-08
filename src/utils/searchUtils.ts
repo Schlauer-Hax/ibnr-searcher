@@ -1,16 +1,25 @@
 
-import { csvData1, csvData2, SearchResult } from '@/data/csvData';
+import { csvData1, csvData2, SearchResult, loadCSVData } from '@/data/csvData';
 
 export class CSVSearchEngine {
   private data1: string[][];
   private data2: string[][];
   private searchIndex: Map<string, { row: number; source: 'CSV1' | 'CSV2'; column: number }[]>;
+  private isLoaded: boolean = false;
 
   constructor() {
+    this.data1 = [];
+    this.data2 = [];
+    this.searchIndex = new Map();
+    this.initializeData();
+  }
+
+  private async initializeData() {
+    await loadCSVData();
     this.data1 = csvData1.map(line => line.split(';'));
     this.data2 = csvData2.map(line => line.split(';'));
-    this.searchIndex = new Map();
     this.buildSearchIndex();
+    this.isLoaded = true;
   }
 
   private buildSearchIndex() {
@@ -58,7 +67,7 @@ export class CSVSearchEngine {
   }
 
   search(query: string): SearchResult[] {
-    if (!query.trim()) return [];
+    if (!query.trim() || !this.isLoaded) return [];
 
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 1);
     const matches = new Map<string, { score: number; row: number; source: 'CSV1' | 'CSV2' }>();
