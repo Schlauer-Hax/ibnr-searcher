@@ -4,7 +4,7 @@ import { csvData1, csvData2, SearchResult, loadCSVData } from '@/data/csvData';
 export class CSVSearchEngine {
   private data1: string[][];
   private data2: string[][];
-  private searchIndex: Map<string, { row: number; source: 'CSV1' | 'CSV2'; column: number }[]>;
+  private searchIndex: Map<string, { row: number; source: 'Deutschland' | 'Europe'; column: number }[]>;
   private isLoaded: boolean = false;
 
   constructor() {
@@ -23,7 +23,7 @@ export class CSVSearchEngine {
   }
 
   private buildSearchIndex() {
-    // Index CSV1
+    // Index Deutschland data
     this.data1.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell.trim()) {
@@ -35,7 +35,7 @@ export class CSVSearchEngine {
               }
               this.searchIndex.get(word)!.push({
                 row: rowIndex,
-                source: 'CSV1',
+                source: 'Deutschland',
                 column: colIndex
               });
             }
@@ -44,7 +44,7 @@ export class CSVSearchEngine {
       });
     });
 
-    // Index CSV2
+    // Index Europe data
     this.data2.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
         if (cell.trim()) {
@@ -56,7 +56,7 @@ export class CSVSearchEngine {
               }
               this.searchIndex.get(word)!.push({
                 row: rowIndex,
-                source: 'CSV2',
+                source: 'Europe',
                 column: colIndex
               });
             }
@@ -70,7 +70,7 @@ export class CSVSearchEngine {
     if (!query.trim() || !this.isLoaded) return [];
 
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 1);
-    const matches = new Map<string, { score: number; row: number; source: 'CSV1' | 'CSV2' }>();
+    const matches = new Map<string, { score: number; row: number; source: 'Deutschland' | 'Europe' }>();
 
     queryWords.forEach(word => {
       // Exact matches
@@ -102,7 +102,7 @@ export class CSVSearchEngine {
       .slice(0, 50) // Limit results for performance
       .map(match => ({
         id: `${match.source}-${match.row}`,
-        data: match.source === 'CSV1' ? this.data1[match.row] : this.data2[match.row],
+        data: match.source === 'Deutschland' ? this.data1[match.row] : this.data2[match.row],
         score: match.score,
         source: match.source
       }));

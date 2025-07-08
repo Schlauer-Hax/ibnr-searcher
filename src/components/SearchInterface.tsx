@@ -99,7 +99,7 @@ const SearchInterface = () => {
               {results.map((result) => (
                 <TableRow key={result.id} className="hover:bg-primary/5 transition-colors duration-200 border-border/50">
                   <TableCell>
-                    <Badge variant={result.source === 'CSV1' ? 'default' : 'secondary'} className="shadow-sm">
+                    <Badge variant={result.source === 'Deutschland' ? 'default' : 'secondary'} className="shadow-sm">
                       {result.source}
                     </Badge>
                   </TableCell>

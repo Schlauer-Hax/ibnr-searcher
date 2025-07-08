@@ -30,5 +30,5 @@ export interface SearchResult {
   id: string;
   data: string[];
   score: number;
-  source: 'CSV1' | 'CSV2';
+  source: 'Deutschland' | 'Europe';
 }
