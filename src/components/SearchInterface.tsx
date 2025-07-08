@@ -58,7 +58,7 @@ const SearchInterface = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-primary via-blue-500 to-purple-500 opacity-20 blur-3xl -z-10"></div>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Advanced search engine for IBNR codes with real-time results and intelligent matching
+            Search for IBNR station codes used by Deutsche Bahn for railway stations across Germany and Europe
           </p>
         </div>
 
