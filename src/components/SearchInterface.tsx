@@ -88,7 +88,6 @@ const SearchInterface = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-20">Source</TableHead>
-                <TableHead className="w-20">Score</TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
@@ -99,12 +98,15 @@ const SearchInterface = () => {
               {results.map((result) => (
                 <TableRow key={result.id} className="hover:bg-primary/5 transition-colors duration-200 border-border/50">
                   <TableCell>
-                    <Badge variant={result.source === 'Deutschland' ? 'default' : 'secondary'} className="shadow-sm">
+                    <Badge 
+                      variant={
+                        result.source === 'Deutschland' ? 'default' : 
+                        result.source === 'Europe' ? 'secondary' : 'outline'
+                      } 
+                      className="shadow-sm"
+                    >
                       {result.source}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">{result.score}</Badge>
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <span 
