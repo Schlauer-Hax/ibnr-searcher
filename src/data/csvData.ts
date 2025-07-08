@@ -13,12 +13,20 @@ export const loadCSVData = async (): Promise<void> => {
       fetch('/grenze.csv')
     ]);
     
-    // Ensure proper character encoding by specifying UTF-8
-    const [text1, text2, text3] = await Promise.all([
-      response1.text(),
-      response2.text(),
-      response3.text()
+    // Read as ArrayBuffer first, then decode with proper UTF-8 handling
+    const [buffer1, buffer2, buffer3] = await Promise.all([
+      response1.arrayBuffer(),
+      response2.arrayBuffer(),
+      response3.arrayBuffer()
     ]);
+    
+    // Use TextDecoder to properly handle UTF-8 encoding
+    const decoder = new TextDecoder('utf-8');
+    const [text1, text2, text3] = [
+      decoder.decode(buffer1),
+      decoder.decode(buffer2),
+      decoder.decode(buffer3)
+    ];
     
     csvData1 = text1.trim().split('\n').filter(line => line.trim());
     csvData2 = text2.trim().split('\n').filter(line => line.trim());
