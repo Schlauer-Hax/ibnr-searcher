@@ -34,11 +34,11 @@ const SearchInterface = () => {
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim()) return text;
     
-    const queryWords = query.toLowerCase().split(/\s+/);
+    const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 0);
     let highlightedText = text;
     
     queryWords.forEach(word => {
-      const regex = new RegExp(`(${word})`, 'gi');
+      const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
       highlightedText = highlightedText.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
     });
     
