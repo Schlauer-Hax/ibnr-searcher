@@ -8,9 +8,9 @@ export let csvData3: string[] = [];
 export const loadCSVData = async (): Promise<void> => {
   try {
     const [response1, response2, response3] = await Promise.all([
-      fetch('/deutschland_nr.csv'),
-      fetch('/europa.csv'),
-      fetch('/grenze.csv')
+      fetch('./deutschland_nr.csv'),
+      fetch('./europa.csv'),
+      fetch('./grenze.csv')
     ]);
     
     // Get response as ArrayBuffer and decode with UTF-8, handling BOM if present
