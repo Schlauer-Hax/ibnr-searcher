@@ -1,4 +1,3 @@
-
 import { csvData1, csvData2, csvData3, SearchResult, loadCSVData } from '@/data/csvData';
 
 export class CSVSearchEngine {
@@ -90,6 +89,11 @@ export class CSVSearchEngine {
     });
   }
 
+  private generateEntryKey(data: string[]): string {
+    // Use the first two columns (ID and Name) to create a unique key for deduplication
+    return `${data[0]?.trim()}-${data[1]?.trim()}`.toLowerCase();
+  }
+
   search(query: string): SearchResult[] {
     if (!query.trim() || !this.isLoaded) return [];
 
@@ -120,17 +124,36 @@ export class CSVSearchEngine {
       }
     });
 
-    // Convert to results and sort by score
-    const results: SearchResult[] = Array.from(matches.values())
+    // Convert to results and deduplicate
+    const resultMap = new Map<string, SearchResult>();
+    
+    Array.from(matches.values()).forEach(match => {
+      const data = match.source === 'Deutschland' ? this.data1[match.row] : 
+                   match.source === 'Europe' ? this.data2[match.row] : this.data3[match.row];
+      
+      const entryKey = this.generateEntryKey(data);
+      
+      if (resultMap.has(entryKey)) {
+        // Entry already exists, combine sources and update score
+        const existing = resultMap.get(entryKey)!;
+        existing.sources = [...existing.sources, match.source];
+        existing.score = Math.max(existing.score, match.score);
+      } else {
+        // New entry
+        resultMap.set(entryKey, {
+          id: `${match.source}-${match.row}`,
+          data: data,
+          score: match.score,
+          source: match.source,
+          sources: [match.source]
+        });
+      }
+    });
+
+    // Sort by score and limit results
+    const results: SearchResult[] = Array.from(resultMap.values())
       .sort((a, b) => b.score - a.score)
-      .slice(0, 50) // Limit results for performance
-      .map(match => ({
-        id: `${match.source}-${match.row}`,
-        data: match.source === 'Deutschland' ? this.data1[match.row] : 
-              match.source === 'Europe' ? this.data2[match.row] : this.data3[match.row],
-        score: match.score,
-        source: match.source
-      }));
+      .slice(0, 50);
 
     return results;
   }

@@ -87,7 +87,7 @@ const SearchInterface = () => {
             <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-20">Source</TableHead>
+                <TableHead className="w-24">Sources</TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Code</TableHead>
@@ -98,15 +98,20 @@ const SearchInterface = () => {
               {results.map((result) => (
                 <TableRow key={result.id} className="hover:bg-primary/5 transition-colors duration-200 border-border/50">
                   <TableCell>
-                    <Badge 
-                      variant={
-                        result.source === 'Deutschland' ? 'default' : 
-                        result.source === 'Europe' ? 'secondary' : 'outline'
-                      } 
-                      className="shadow-sm"
-                    >
-                      {result.source}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                      {result.sources.map((source, idx) => (
+                        <Badge 
+                          key={idx}
+                          variant={
+                            source === 'Deutschland' ? 'default' : 
+                            source === 'Europe' ? 'secondary' : 'outline'
+                          } 
+                          className="shadow-sm text-xs"
+                        >
+                          {source}
+                        </Badge>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">
                     <span 

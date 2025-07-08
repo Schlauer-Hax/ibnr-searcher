@@ -37,4 +37,5 @@ export interface SearchResult {
   data: string[];
   score: number;
   source: 'Deutschland' | 'Europe' | 'Grenze';
+  sources: ('Deutschland' | 'Europe' | 'Grenze')[]; // Array of all sources where this entry appears
 }
