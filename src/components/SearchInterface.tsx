@@ -35,14 +35,16 @@ const SearchInterface = () => {
     if (!query.trim()) return text;
     
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 0);
-    let highlightedText = text;
+    if (queryWords.length === 0) return text;
     
-    queryWords.forEach(word => {
-      const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-      highlightedText = highlightedText.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
-    });
+    // Sort words by length (longest first) to avoid partial matches interfering
+    const sortedWords = queryWords.sort((a, b) => b.length - a.length);
     
-    return highlightedText;
+    // Create a single regex that matches any of the words
+    const escapedWords = sortedWords.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(${escapedWords.join('|')})`, 'gi');
+    
+    return text.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
   };
 
   return (
