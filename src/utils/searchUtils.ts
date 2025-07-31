@@ -118,21 +118,23 @@ export class CSVSearchEngine {
     return `${data[0]?.trim()}-${data[1]?.trim()}`.toLowerCase();
   }
 
-  search(query: string): SearchResult[] {
+  search(query: string, allowedDatasets: string[] = ['Deutschland', 'Europe', 'Grenze', 'DS100']): SearchResult[] {
     if (!query.trim() || !this.isLoaded) return [];
 
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 1);
     const directMatches = new Map<string, { score: number; row: number; source: 'Deutschland' | 'Europe' | 'Grenze' | 'DS100' }>();
 
-    // First pass: direct matches in all datasets
+    // First pass: direct matches in allowed datasets only
     queryWords.forEach(word => {
       // Exact matches
       if (this.searchIndex.has(word)) {
         this.searchIndex.get(word)!.forEach(match => {
-          const key = `${match.source}-${match.row}`;
-          const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
-          current.score += 10; // Higher score for exact word matches
-          directMatches.set(key, current);
+          if (allowedDatasets.includes(match.source)) {
+            const key = `${match.source}-${match.row}`;
+            const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
+            current.score += 10; // Higher score for exact word matches
+            directMatches.set(key, current);
+          }
         });
       }
 
@@ -140,10 +142,12 @@ export class CSVSearchEngine {
       for (const [indexWord, indexMatches] of this.searchIndex.entries()) {
         if (indexWord.includes(word) && indexWord !== word) {
           indexMatches.forEach(match => {
-            const key = `${match.source}-${match.row}`;
-            const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
-            current.score += 5; // Lower score for partial matches
-            directMatches.set(key, current);
+            if (allowedDatasets.includes(match.source)) {
+              const key = `${match.source}-${match.row}`;
+              const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
+              current.score += 5; // Lower score for partial matches
+              directMatches.set(key, current);
+            }
           });
         }
       }
@@ -155,7 +159,7 @@ export class CSVSearchEngine {
     // Check if query looks like an ID from other datasets
     const isIdQuery = /^\d/.test(query.trim());
     
-    if (isIdQuery) {
+    if (isIdQuery && allowedDatasets.includes('DS100')) {
       // For ID queries, find station names from other datasets and search DS100
       Array.from(directMatches.values()).forEach(match => {
         if (match.source !== 'DS100') {

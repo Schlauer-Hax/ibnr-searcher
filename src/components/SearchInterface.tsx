@@ -3,13 +3,15 @@ import { useState, useMemo, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Filter } from 'lucide-react';
 import { CSVSearchEngine } from '@/utils/searchUtils';
 import { SearchResult } from '@/data/csvData';
 
 const SearchInterface = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedDatasets, setSelectedDatasets] = useState<string[]>(['Deutschland', 'Europe', 'Grenze', 'DS100']);
 
   // Initialize search engine once
   const searchEngine = useMemo(() => new CSVSearchEngine(), []);
@@ -21,15 +23,37 @@ const SearchInterface = () => {
       return;
     }
     
-    const searchResults = searchEngine.search(searchQuery);
+    const searchResults = searchEngine.search(searchQuery, selectedDatasets);
     setResults(searchResults);
-  }, [searchEngine]);
+  }, [searchEngine, selectedDatasets]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     handleSearch(value);
   };
+
+  const handleDatasetToggle = (dataset: string) => {
+    setSelectedDatasets(prev => {
+      const newSelection = prev.includes(dataset) 
+        ? prev.filter(d => d !== dataset)
+        : [...prev, dataset];
+      
+      // Re-search with new dataset selection if there's a query
+      if (query.trim().length >= 2) {
+        setTimeout(() => handleSearch(query), 0);
+      }
+      
+      return newSelection;
+    });
+  };
+
+  const datasets = [
+    { name: 'Deutschland', color: 'default' },
+    { name: 'Europe', color: 'secondary' },
+    { name: 'Grenze', color: 'outline' },
+    { name: 'DS100', color: 'destructive' }
+  ];
 
   const highlightMatch = (text: string, query: string) => {
     if (!query.trim()) return text;
@@ -62,16 +86,44 @@ const SearchInterface = () => {
           </p>
         </div>
 
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input
-            type="text"
-            placeholder="Search IBNR codes, station names, or locations..."
-            value={query}
-            onChange={handleInputChange}
-            className="pl-12 text-lg py-8 bg-card/80 backdrop-blur-sm border-primary/20 focus:border-primary/50 shadow-lg hover:shadow-glow transition-all duration-300"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10 rounded-md -z-10 blur-xl opacity-50"></div>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Search IBNR codes, station names, or locations..."
+              value={query}
+              onChange={handleInputChange}
+              className="pl-12 text-lg py-8 bg-card/80 backdrop-blur-sm border-primary/20 focus:border-primary/50 shadow-lg hover:shadow-glow transition-all duration-300"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-purple-500/10 rounded-md -z-10 blur-xl opacity-50"></div>
+          </div>
+
+          <div className="bg-card/50 backdrop-blur-sm border border-primary/20 rounded-lg p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Filter Datasets</span>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              {datasets.map((dataset) => (
+                <div key={dataset.name} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={dataset.name}
+                    checked={selectedDatasets.includes(dataset.name)}
+                    onCheckedChange={() => handleDatasetToggle(dataset.name)}
+                  />
+                  <label
+                    htmlFor={dataset.name}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    <Badge variant={dataset.color as any} className="text-xs">
+                      {dataset.name}
+                    </Badge>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {query.trim().length > 0 && (
