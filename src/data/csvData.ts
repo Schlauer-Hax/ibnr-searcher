@@ -3,21 +3,24 @@
 export let csvData1: string[] = [];
 export let csvData2: string[] = [];
 export let csvData3: string[] = [];
+export let csvData4: string[] = [];
 
 // Function to load CSV data from files
 export const loadCSVData = async (): Promise<void> => {
   try {
-    const [response1, response2, response3] = await Promise.all([
+    const [response1, response2, response3, response4] = await Promise.all([
       fetch('./deutschland_nr.csv'),
       fetch('./europa.csv'),
-      fetch('./grenze.csv')
+      fetch('./grenze.csv'),
+      fetch('./ds100.csv')
     ]);
     
     // Get response as ArrayBuffer and decode with UTF-8, handling BOM if present
-    const [buffer1, buffer2, buffer3] = await Promise.all([
+    const [buffer1, buffer2, buffer3, buffer4] = await Promise.all([
       response1.arrayBuffer(),
       response2.arrayBuffer(),
-      response3.arrayBuffer()
+      response3.arrayBuffer(),
+      response4.arrayBuffer()
     ]);
     
     const decodeWithBOM = (buffer: ArrayBuffer): string => {
@@ -42,15 +45,17 @@ export const loadCSVData = async (): Promise<void> => {
       }
     };
     
-    const [text1, text2, text3] = [
+    const [text1, text2, text3, text4] = [
       decodeWithBOM(buffer1),
       decodeWithBOM(buffer2),
-      decodeWithBOM(buffer3)
+      decodeWithBOM(buffer3),
+      decodeWithBOM(buffer4)
     ];
     
     csvData1 = text1.trim().split('\n').filter(line => line.trim());
     csvData2 = text2.trim().split('\n').filter(line => line.trim());
     csvData3 = text3.trim().split('\n').filter(line => line.trim());
+    csvData4 = text4.trim().split('\n').filter(line => line.trim());
     
     console.log('CSV data loaded successfully');
   } catch (error) {
@@ -59,6 +64,7 @@ export const loadCSVData = async (): Promise<void> => {
     csvData1 = [];
     csvData2 = [];
     csvData3 = [];
+    csvData4 = [];
   }
 };
 
@@ -66,6 +72,6 @@ export interface SearchResult {
   id: string;
   data: string[];
   score: number;
-  source: 'Deutschland' | 'Europe' | 'Grenze';
-  sources: ('Deutschland' | 'Europe' | 'Grenze')[]; // Array of all sources where this entry appears
+  source: 'Deutschland' | 'Europe' | 'Grenze' | 'DS100';
+  sources: ('Deutschland' | 'Europe' | 'Grenze' | 'DS100')[]; // Array of all sources where this entry appears
 }

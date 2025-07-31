@@ -106,7 +106,8 @@ const SearchInterface = () => {
                           key={idx}
                           variant={
                             source === 'Deutschland' ? 'default' : 
-                            source === 'Europe' ? 'secondary' : 'outline'
+                            source === 'Europe' ? 'secondary' : 
+                            source === 'DS100' ? 'destructive' : 'outline'
                           } 
                           className="shadow-sm text-xs"
                         >

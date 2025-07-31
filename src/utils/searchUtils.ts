@@ -1,16 +1,18 @@
-import { csvData1, csvData2, csvData3, SearchResult, loadCSVData } from '@/data/csvData';
+import { csvData1, csvData2, csvData3, csvData4, SearchResult, loadCSVData } from '@/data/csvData';
 
 export class CSVSearchEngine {
   private data1: string[][];
   private data2: string[][];
   private data3: string[][];
-  private searchIndex: Map<string, { row: number; source: 'Deutschland' | 'Europe' | 'Grenze'; column: number }[]>;
+  private data4: string[][];
+  private searchIndex: Map<string, { row: number; source: 'Deutschland' | 'Europe' | 'Grenze' | 'DS100'; column: number }[]>;
   private isLoaded: boolean = false;
 
   constructor() {
     this.data1 = [];
     this.data2 = [];
     this.data3 = [];
+    this.data4 = [];
     this.searchIndex = new Map();
     this.initializeData();
   }
@@ -20,6 +22,7 @@ export class CSVSearchEngine {
     this.data1 = csvData1.map(line => line.split(';'));
     this.data2 = csvData2.map(line => line.split(';'));
     this.data3 = csvData3.map(line => line.split(';'));
+    this.data4 = csvData4.map(line => line.split('|'));
     this.buildSearchIndex();
     this.isLoaded = true;
   }
@@ -87,6 +90,27 @@ export class CSVSearchEngine {
         }
       });
     });
+
+    // Index DS100 data
+    this.data4.forEach((row, rowIndex) => {
+      row.forEach((cell, colIndex) => {
+        if (cell.trim()) {
+          const words = cell.toLowerCase().split(/\s+/);
+          words.forEach(word => {
+            if (word.length > 1) {
+              if (!this.searchIndex.has(word)) {
+                this.searchIndex.set(word, []);
+              }
+              this.searchIndex.get(word)!.push({
+                row: rowIndex,
+                source: 'DS100',
+                column: colIndex
+              });
+            }
+          });
+        }
+      });
+    });
   }
 
   private generateEntryKey(data: string[]): string {
@@ -98,16 +122,17 @@ export class CSVSearchEngine {
     if (!query.trim() || !this.isLoaded) return [];
 
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 1);
-    const matches = new Map<string, { score: number; row: number; source: 'Deutschland' | 'Europe' | 'Grenze' }>();
+    const directMatches = new Map<string, { score: number; row: number; source: 'Deutschland' | 'Europe' | 'Grenze' | 'DS100' }>();
 
+    // First pass: direct matches in all datasets
     queryWords.forEach(word => {
       // Exact matches
       if (this.searchIndex.has(word)) {
         this.searchIndex.get(word)!.forEach(match => {
           const key = `${match.source}-${match.row}`;
-          const current = matches.get(key) || { score: 0, row: match.row, source: match.source };
+          const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
           current.score += 10; // Higher score for exact word matches
-          matches.set(key, current);
+          directMatches.set(key, current);
         });
       }
 
@@ -116,20 +141,57 @@ export class CSVSearchEngine {
         if (indexWord.includes(word) && indexWord !== word) {
           indexMatches.forEach(match => {
             const key = `${match.source}-${match.row}`;
-            const current = matches.get(key) || { score: 0, row: match.row, source: match.source };
+            const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
             current.score += 5; // Lower score for partial matches
-            matches.set(key, current);
+            directMatches.set(key, current);
           });
         }
       }
     });
 
+    // Second pass: cross-reference DS100 based on station names from other datasets
+    const crossReferenceMatches = new Map<string, { score: number; row: number; source: 'DS100' }>();
+    
+    // Check if query looks like an ID from other datasets
+    const isIdQuery = /^\d/.test(query.trim());
+    
+    if (isIdQuery) {
+      // For ID queries, find station names from other datasets and search DS100
+      Array.from(directMatches.values()).forEach(match => {
+        if (match.source !== 'DS100') {
+          const data = match.source === 'Deutschland' ? this.data1[match.row] : 
+                       match.source === 'Europe' ? this.data2[match.row] : this.data3[match.row];
+          
+          // Get station name (second column for most datasets)
+          const stationName = data[1]?.toLowerCase();
+          if (stationName) {
+            // Search for this station name in DS100 data
+            this.data4.forEach((row, rowIndex) => {
+              const ds100StationName = row[1]?.toLowerCase();
+              if (ds100StationName && ds100StationName.includes(stationName)) {
+                const key = `DS100-${rowIndex}`;
+                crossReferenceMatches.set(key, {
+                  score: match.score * 0.8, // Slightly lower score for cross-references
+                  row: rowIndex,
+                  source: 'DS100'
+                });
+              }
+            });
+          }
+        }
+      });
+    }
+
+    // Combine all matches
+    const allMatches = new Map([...directMatches, ...crossReferenceMatches]);
+
     // Convert to results and deduplicate
     const resultMap = new Map<string, SearchResult>();
     
-    Array.from(matches.values()).forEach(match => {
+    Array.from(allMatches.values()).forEach(match => {
       const data = match.source === 'Deutschland' ? this.data1[match.row] : 
-                   match.source === 'Europe' ? this.data2[match.row] : this.data3[match.row];
+                   match.source === 'Europe' ? this.data2[match.row] : 
+                   match.source === 'Grenze' ? this.data3[match.row] : this.data4[match.row];
       
       const entryKey = this.generateEntryKey(data);
       
