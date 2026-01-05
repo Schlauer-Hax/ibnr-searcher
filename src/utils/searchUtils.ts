@@ -123,6 +123,7 @@ export class CSVSearchEngine {
 
     const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 1);
     const directMatches = new Map<string, { score: number; row: number; source: 'Deutschland' | 'Europe' | 'Grenze' | 'DS100' }>();
+    const MAX_MATCHES = 500; // Early termination limit
 
     // First pass: direct matches in allowed datasets only
     queryWords.forEach(word => {
@@ -138,34 +139,53 @@ export class CSVSearchEngine {
         });
       }
 
-      // Partial matches
-      for (const [indexWord, indexMatches] of this.searchIndex.entries()) {
-        if (indexWord.includes(word) && indexWord !== word) {
-          indexMatches.forEach(match => {
-            if (allowedDatasets.includes(match.source)) {
-              const key = `${match.source}-${match.row}`;
-              const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
-              current.score += 5; // Lower score for partial matches
-              directMatches.set(key, current);
+      // Partial matches - only for queries of 3+ characters to avoid lag
+      if (word.length >= 3) {
+        let partialMatchCount = 0;
+        for (const [indexWord, indexMatches] of this.searchIndex.entries()) {
+          // Early termination if too many matches found
+          if (directMatches.size >= MAX_MATCHES) {
+            break;
+          }
+
+          if (indexWord.includes(word) && indexWord !== word) {
+            indexMatches.forEach(match => {
+              if (allowedDatasets.includes(match.source)) {
+                const key = `${match.source}-${match.row}`;
+                const current = directMatches.get(key) || { score: 0, row: match.row, source: match.source };
+                current.score += 5; // Lower score for partial matches
+                directMatches.set(key, current);
+              }
+            });
+
+            partialMatchCount++;
+            // Limit partial match processing
+            if (partialMatchCount >= 100) {
+              break;
             }
-          });
+          }
         }
       }
     });
 
     // Second pass: cross-reference DS100 based on station names from other datasets
     const crossReferenceMatches = new Map<string, { score: number; row: number; source: 'DS100' }>();
-    
+
     // Check if query looks like an ID from other datasets
     const isIdQuery = /^\d/.test(query.trim());
-    
-    if (isIdQuery && allowedDatasets.includes('DS100')) {
+
+    if (isIdQuery && allowedDatasets.includes('DS100') && directMatches.size < MAX_MATCHES) {
       // For ID queries, find station names from other datasets and search DS100
-      Array.from(directMatches.values()).forEach(match => {
+      // Limit cross-reference to top 50 matches to avoid lag
+      const topMatches = Array.from(directMatches.values())
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 50);
+
+      topMatches.forEach(match => {
         if (match.source !== 'DS100') {
-          const data = match.source === 'Deutschland' ? this.data1[match.row] : 
+          const data = match.source === 'Deutschland' ? this.data1[match.row] :
                        match.source === 'Europe' ? this.data2[match.row] : this.data3[match.row];
-          
+
           // Get station name (second column for most datasets)
           const stationName = data[1]?.toLowerCase();
           if (stationName) {

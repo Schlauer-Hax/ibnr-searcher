@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ const SearchInterface = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedDatasets, setSelectedDatasets] = useState<string[]>(['Deutschland', 'Europe', 'Grenze', 'DS100']);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize search engine once
   const searchEngine = useMemo(() => new CSVSearchEngine(), []);
@@ -22,7 +23,7 @@ const SearchInterface = () => {
       setResults([]);
       return;
     }
-    
+
     const searchResults = searchEngine.search(searchQuery, selectedDatasets);
     setResults(searchResults);
   }, [searchEngine, selectedDatasets]);
@@ -30,8 +31,26 @@ const SearchInterface = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    handleSearch(value);
+
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer for debounced search
+    debounceTimerRef.current = setTimeout(() => {
+      handleSearch(value);
+    }, 150);
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleDatasetToggle = (dataset: string) => {
     setSelectedDatasets(prev => {
