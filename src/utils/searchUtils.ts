@@ -139,8 +139,13 @@ export class CSVSearchEngine {
         });
       }
 
-      // Partial matches - only for queries of 3+ characters to avoid lag
-      if (word.length >= 3) {
+      // Partial matches - different rules for letters vs numbers
+      // Letters: allow partial matching from 1+ characters (e.g., "a", "be")
+      // Numbers: require 3+ characters to avoid lag (e.g., "8" would match too many IDs)
+      const isNumeric = /^\d+$/.test(word);
+      const shouldDoPartialMatch = isNumeric ? word.length >= 3 : word.length >= 1;
+
+      if (shouldDoPartialMatch) {
         let partialMatchCount = 0;
         for (const [indexWord, indexMatches] of this.searchIndex.entries()) {
           // Early termination if too many matches found
